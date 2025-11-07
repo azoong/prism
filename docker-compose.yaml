@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:15
+    restart: unless-stopped
+    container_name: prism_postgres
+    environment:
+      POSTGRES_USER: prism_user
+      POSTGRES_PASSWORD: prism_password
+      POSTGRES_DB: prism_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - prism_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  prism_postgres_data:
