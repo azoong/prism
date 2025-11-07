@@ -7,6 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { Users } from 'src/users/entities/users.entity';
 import { LoginInputDto } from './dtos/login-user.dto';
 import { TokenPayload } from './types/auth.type';
+import { RefreshTokenDto } from './dtos/refresh-token-dto';
 
 @Injectable()
 export class AuthService {
@@ -58,13 +59,19 @@ export class AuthService {
     });
   }
 
-  jwtVerify(token: string): TokenPayload {
+  jwtVerify(token: string) {
     try {
-      return this.jwtService.verify(token, {
+      const decoded: TokenPayload = this.jwtService.verify(token, {
         secret: this.configService.get('JWT_SECRET'),
       });
+
+      return decoded;
     } catch {
       throw new UnauthorizedException('유효하지 않은 토큰입니다.');
     }
+  }
+
+  rotateToken(user: RefreshTokenDto) {
+    return this.jwtSign({ email: user.email, id: user.id }, false);
   }
 }

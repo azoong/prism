@@ -1,5 +1,5 @@
 import { createParamDecorator, ExecutionContext, InternalServerErrorException } from '@nestjs/common';
-import { RequestWithAuth } from 'src/common/types/request.type';
+import { RequestWithAuth } from './types/auth.type';
 
 export const AuthUser = createParamDecorator((data, context: ExecutionContext) => {
   const req = context.switchToHttp().getRequest<RequestWithAuth>();
