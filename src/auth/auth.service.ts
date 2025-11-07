@@ -6,7 +6,7 @@ import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import { Users } from 'src/users/entities/users.entity';
 import { LoginInputDto } from './dtos/login-user.dto';
-import { TokenPayload } from 'src/common/types/request.type';
+import { TokenPayload } from './types/auth.type';
 
 @Injectable()
 export class AuthService {

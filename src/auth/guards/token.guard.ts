@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from '../auth.service';
-import { RequestWithAuth } from 'src/common/types/request.type';
+import { RequestWithAuth } from '../types/auth.type';
 import { TOKEN_TYPE } from '../const/auth.const';
 
 @Injectable()

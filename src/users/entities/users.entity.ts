@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, Length } from 'class-validator';
 import { CoreEntity } from 'src/common/entities/core.entity';
 import { PointLog } from 'src/points/entities/point-log.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
@@ -18,6 +18,7 @@ export class Users extends CoreEntity {
   @Column()
   @IsNotEmpty()
   @IsString()
+  @Length(8, 20)
   password: string;
 
   @Column({ default: 0 })
