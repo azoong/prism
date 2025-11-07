@@ -1,8 +1,9 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Users } from 'src/users/entities/users.entity';
 import { DataSource, Repository } from 'typeorm';
 import { PointLog } from './entities/point-log.entity';
+import { EarnPointDto } from './dtos/earn-point.dto';
 
 @Injectable()
 export class PointsService {
@@ -14,71 +15,53 @@ export class PointsService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async earn({ userId, points, reason }: { userId: number; points: number; reason: string }) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+  async earnPoints(userId: number, { points, reason }: EarnPointDto) {
+    return this.dataSource.transaction(async (transactionalEntityManager) => {
+      await transactionalEntityManager.save(PointLog, {
+        user: { id: userId },
+        points,
+        reason,
+      });
 
-    try {
-      const user = await queryRunner.manager.findOne(Users, { where: { id: userId } });
+      await transactionalEntityManager.increment(Users, { id: userId }, 'points', points);
+
+      const user = await transactionalEntityManager.findOne(Users, { where: { id: userId } });
+
       if (!user) {
-        throw new NotFoundException(`User with ID ${userId} not found.`);
+        throw new NotFoundException('사용자를 찾을 수 없습니다.');
       }
-
-      user.balance += points;
-      await queryRunner.manager.save(user);
-
-      const pointLog = this.pointLogsRepository.create({ user, points, reason });
-      await queryRunner.manager.save(pointLog);
-
-      await queryRunner.commitTransaction();
 
       return {
-        userId: user.id,
-        pointsAdded: points,
-        currentBalance: user.balance,
+        id: user.id,
+        email: user.email,
+        points: user.points,
       };
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      throw new InternalServerErrorException('An error occurred while processing the transaction.');
-    } finally {
-      await queryRunner.release();
-    }
+    });
   }
 
   async getBalance(userId: number) {
-    const user = await this.usersRepository.findOne({ where: { id: userId } });
+    const user = await this.usersRepository.findOne({ where: { id: userId }, select: ['id', 'points'] });
+
     if (!user) {
-      throw new NotFoundException(`User with ID ${userId} not found.`);
+      throw new NotFoundException('사용자를 찾을 수 없습니다.');
     }
 
     return {
-      userId: user.id,
-      balance: user.balance,
-      lastUpdated: user.updatedAt,
+      id: user.id,
+      points: user.points,
     };
   }
 
-  async getHistory(userId: number) {
-    const user = await this.usersRepository.findOne({ where: { id: userId } });
-    if (!user) {
-      throw new NotFoundException(`User with ID ${userId} not found.`);
+  async getBalanceHistory(userId: number) {
+    const pointLogs = await this.pointLogsRepository.find({
+      where: { user: { id: userId } },
+      order: { createdAt: 'DESC' },
+    });
+
+    if (!pointLogs) {
+      throw new NotFoundException('포인트 내역을 찾을 수 없습니다.');
     }
 
-    const transactions = await this.pointLogsRepository.find({ where: { user: { id: userId } } });
-
-    return {
-      userId: user.id,
-      transactions: transactions.map((t) => ({
-        id: t.id,
-        type: 'earn', // 현재는 적립만 있으므로 하드코딩
-        points: t.points,
-        reason: t.reason,
-        timestamp: t.createdAt,
-      })),
-    };
+    return pointLogs;
   }
 }

@@ -1,23 +1,29 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { PointsService } from './points.service';
 import { EarnPointDto } from './dtos/earn-point.dto';
+import { AccessTokenGuard } from 'src/auth/guards/token.guard';
+import { AuthUser } from 'src/auth/auth-user.decorator';
+import { Users } from 'src/users/entities/users.entity';
 
 @Controller('api')
 export class PointsController {
   constructor(private readonly pointsService: PointsService) {}
 
   @Post('earn')
-  earnPoints(@Body() earnPointDto: EarnPointDto) {
-    return this.pointsService.earn(earnPointDto);
+  @UseGuards(AccessTokenGuard)
+  earnPoints(@AuthUser() user: Users, @Body() earnPointDto: EarnPointDto) {
+    return this.pointsService.earnPoints(user.id, earnPointDto);
   }
 
-  @Get('balance/:userId')
-  getBalance(@Param('userId', ParseIntPipe) userId: number) {
-    return this.pointsService.getBalance(userId);
+  @Get('balance')
+  @UseGuards(AccessTokenGuard)
+  getBalance(@AuthUser() user: Users) {
+    return this.pointsService.getBalance(user.id);
   }
 
-  @Get('history/:userId')
-  getHistory(@Param('userId', ParseIntPipe) userId: number) {
-    return this.pointsService.getHistory(userId);
+  @Get('history')
+  @UseGuards(AccessTokenGuard)
+  getHistory(@AuthUser() user: Users) {
+    return this.pointsService.getBalanceHistory(user.id);
   }
 }

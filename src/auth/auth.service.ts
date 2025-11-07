@@ -6,7 +6,7 @@ import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import { Users } from 'src/users/entities/users.entity';
 import { LoginInputDto } from './dtos/login-user.dto';
-import { RequestWithToken } from 'src/common/types/request.type';
+import { TokenPayload } from 'src/common/types/request.type';
 
 @Injectable()
 export class AuthService {
@@ -53,18 +53,18 @@ export class AuthService {
     };
 
     return this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('JWT_SECRET'),
-      expiresIn: isRefreshToken ? 3600 : 300,
+      secret: this.configService.get('JWT_SECRET'),
+      expiresIn: isRefreshToken ? '7d' : '1d',
     });
   }
 
-  jwtVerify(token: string): RequestWithToken {
+  jwtVerify(token: string): TokenPayload {
     try {
       return this.jwtService.verify(token, {
-        secret: this.configService.get('PRIVATE_KEY'),
+        secret: this.configService.get('JWT_SECRET'),
       });
     } catch {
-      throw new UnauthorizedException('유효하지 않은 토큰입니다. verifyToken');
+      throw new UnauthorizedException('유효하지 않은 토큰입니다.');
     }
   }
 }

@@ -21,7 +21,7 @@ export class Users extends CoreEntity {
   password: string;
 
   @Column({ default: 0 })
-  balance: number;
+  points: number;
 
   @OneToMany(() => PointLog, (pointLog) => pointLog.user)
   pointLogs: PointLog[];
