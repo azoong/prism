@@ -14,11 +14,7 @@ export class PointsService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async earn({ userId, points, reason }: {
-    userId: number;
-    points: number;
-    reason: string;
-  }) {
+  async earn({ userId, points, reason }: { userId: number; points: number; reason: string }) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -76,7 +72,7 @@ export class PointsService {
 
     return {
       userId: user.id,
-      transactions: transactions.map(t => ({
+      transactions: transactions.map((t) => ({
         id: t.id,
         type: 'earn', // 현재는 적립만 있으므로 하드코딩
         points: t.points,
