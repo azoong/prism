@@ -12,5 +12,25 @@ services:
     volumes:
       - prism_postgres_data:/var/lib/postgresql/data
 
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres 
+    env_file:
+      - .env
+    environment: 
+      DB_HOST: postgres 
+      DB_PORT: 5432
+      NODE_ENV: production
+      
+    volumes:
+      - ./backend:/app/backend 
+      - /app/node_modules 
+    command: npm run start:prod
+
 volumes:
   prism_postgres_data:
